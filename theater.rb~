@@ -167,7 +167,7 @@ class Action
   def rate=(rate)
     @rate = rate
   end
-  def rate
+  deg rate
     @rate
   end     
 end
