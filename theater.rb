@@ -3,10 +3,7 @@ class Actor
   attr_accessor :name, :sex, :age, :actions
   
   def initialize(name, sex, age, actions = [])
-  	@actions = actions || []
-  	@name = name
-  	@sex = sex
-  	@age = age
+		@name, @sex, @age, @actions = name, sex, age, actions = []
   end 
   
   # Лучшая роль для выступающего
@@ -15,102 +12,42 @@ class Actor
     tmp = nil
     self.actions.each do |a|
       if a.rate > tmp_rate
+				tmp_rate = a.rate
         tmp = a
       end
     end
-    puts "Best role for #{self.name}: " + tmp.role_name
+		tmp
   end
   
   # Общая продолжительность выступлений
   def sum_duration
-    sum = 0
-    self.actions.each { |a| sum = sum + a.duration }
-    puts "Actor #{@name} duration: " + sum.to_s
-  end
-  
-  def age=(age)
-    @age = age
-  end
-  def age
-  	@age
-  end
-  def sex=(sex)
-  	@sex = sex
-  end
-  def sex
-  	@sex
-  end
-  def name=(name)
-    @name = name
-  end
-  def name
-    @name
+    sum = self.actions.inject(0) { |s, a| s += a.duration }
   end
 end
 
 class Role
   
-  attr_accessor :name, :sex, :range1, :range2, :actors, :juri
+  attr_accessor :name, :sex, :range, :actors, :juri
   
-  def initialize(name, sex, range1, range2, actors = [], juri = [])
+  def initialize(name, sex, range, actors = [], juri = [])
   	@actors = actors || []
   	@juri = juri || []
   	@name = name
   	@sex = sex
-  	@range1 = range1
-  	@range2 = range2
+  	@range = range
   end
-  def name=(name)
-    @name = name
-  end
-  def name
-    @name
-  end
-  def sex=(sex)
-  	@sex = sex
-  end
-  def sex
-  	@sex
-  end
-  def range1=(range1)
-  	@range1 = range1
-  end
-  def range1
-  	@range1
-  end
-  def range2=(range2)
-  	@range2 = range2
-  end
-  def range2
-  	@range2
-  end
-
+	
   # Подходящие к роли актеры выступают по 1-му разу
   def do_actions
     puts "======== ROLE #{self.name} ========="
     self.actors.each do |a|
       print "Actor: #{a.name} - "
-      if a.sex == self.sex && a.age.between?(self.range1, self.range2)
-        action = Action.new(self.name, "role " + self.name, 1 + rand(9), 'textext', 0)        
+			if a.sex == self.sex && self.range.include?(a.age)
+        action = Action.new(self.name, "role " + self.name, rand(10), 'textext', 0)        
         # Присваиваем оценки жюри актеру за выступление по этой роли
-        self.juri.each do |j|
-          tmp_rate = 0
-          if j.sex == 'man'
-            if a.sex == 'woman' && a.age.between?(18,25)
-              tmp_rate = tmp_rate + 7 + rand(3)
-            else
-              tmp_rate = tmp_rate + 1 + rand(9)
-            end
-          elsif j.sex == 'woman'
-            if action.text.size < 30
-              tmp_rate = tmp_rate + 1 + rand(6)
-            else
-              tmp_rate = tmp_rate + 1 + rand(9)
-            end
-          else
-            puts 'Juri sex error'
-          end
-          action.rate = action.rate + tmp_rate
+				self.juri.each do |j|
+					tmp_rate = rate(a, j, action)
+					action.rate += tmp_rate
           print "Juri(#{j.sex}) : #{tmp_rate} "
         end
         action.rate = (action.rate/juri.size).to_i
@@ -123,14 +60,23 @@ class Role
     end
     puts "========= END role: #{self.name} ========"
   end
-      
+
+	def rate(actor, juri, action)
+		return rand(7..10) if juri.sex == "man" && actor.sex == "woman" && (18..25).include?(actor.age)
+		return rand(0..7) if juri.sex == "woman" && action.text.split.size < 30
+		return rand(0..10)
+	end
+
 end
 
 class Juri
+
   attr_accessor :sex
+
   def initialize(sex)
     @sex = sex
   end
+
 end
 
 class Action
@@ -146,28 +92,4 @@ class Action
     puts "Action: Role: #{self.role_name} Theme: #{self.theme} Dur: #{self.duration.to_s} Text: #{self.text}"
   end
   
-  def theme=(theme)
-    @theme = theme
-  end
-  def theme
-    @theme
-  end
-  def duration=(duration)
-    @duration = duration
-  end
-  def duration
-    @duration
-  end
-  def text=(text)
-    @text = text
-  end     
-  def text
-    @text
-  end
-  def rate=(rate)
-    @rate = rate
-  end
-  def rate
-    @rate
-  end     
 end
